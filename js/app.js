@@ -1,42 +1,118 @@
-// const midi = new Midi()
+if (
+    !(
+        window.File &&
+        window.FileReader &&
+        window.FileList &&
+        window.Blob
+    )
+) {
+    document.querySelector("#FileDrop #Text").textContent =
+        "Reading files not supported by this browser";
+} else {
+    const fileDrop = document.querySelector("#FileDrop");
 
-// Start function
-const start = async function () {
-    const midi = await Midi.fromUrl("midi/Pafoflux_drums.mid");
+    fileDrop.addEventListener("dragenter", () =>
+        fileDrop.classList.add("Hover")
+    );
 
-    // console.log(result);
-    // return result;
+    fileDrop.addEventListener("dragleave", () =>
+        fileDrop.classList.remove("Hover")
+    );
+
+    fileDrop.addEventListener("drop", () =>
+        fileDrop.classList.remove("Hover")
+    );
+
+    document
+        .querySelector("#FileDrop input")
+        .addEventListener("change", (e) => {
+            //get the files
+            const files = e.target.files;
+            if (files.length > 0) {
+                const file = files[0];
+                document.querySelector(
+                    "#FileDrop #Text"
+                ).textContent = file.name;
+                parseFile(file);
+            }
+        });
 }
 
-    (async () => {
-        // const midi = start();
-        start()
+let currentMidi = null;
+const converter=[
+    {"origin":36, "destination":1}
+]
 
-        //the file name decoded from the first track
-        const name = midi.name
+function parseFile(file) {
+    //read the file
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const midi = new Midi(e.target.result);
 
-        //get the tracks
-        midi.tracks.forEach(track => {
-            //tracks have notes and controlChanges
-            console.log(track)
-            //notes are an array
-            const notes = track.notes
-            notes.forEach(note => {
-                console.log(note)
-                //note.midi, note.time, note.duration, note.name
-            })
+        document.querySelector(
+            "#ResultsText"
+        ).value = JSON.stringify(midi, undefined, 2);
+        document
+            .querySelector("tone-play-toggle")
+            .removeAttribute("disabled");
+        currentMidi = midi;
+        console.log(parseTracks(midi))
+    };
+    reader.readAsArrayBuffer(file);
+}
 
-            //the control changes are an object
-            //the keys are the CC number
-            track.controlChanges[64]
-            //they are also aliased to the CC number's common name (if it has one)
-            track.controlChanges.sustain.forEach(cc => {
-                // cc.ticks, cc.value, cc.time
-            })
+function parseTracks(midiDatas){
+    console.log(currentMidi)
+    currentMidi.tracks.forEach(track => {
+        console.log(track)
+        transpose(track)
+    })
+    return currentMidi
+}
 
-            //the track also has a channel and instrument
-            //track.instrument.name
-        })
+function transpose(track){
+    track.notes.forEach(note=>{
+        let found = converter.find(e => e.origin === note.midi);
+        console.log(found)
+        if(found){
+            note.midi=found.destination
+        }
+    })
+}
 
-
-    })();
+const synths = [];
+document
+    .querySelector("tone-play-toggle")
+    .addEventListener("play", (e) => {
+        const playing = e.detail;
+        if (playing && currentMidi) {
+            const now = Tone.now() + 0.5;
+            currentMidi.tracks.forEach((track) => {
+                //create a synth for each track
+                const synth = new Tone.PolySynth(Tone.Synth, {
+                    envelope: {
+                        attack: 0.02,
+                        decay: 0.1,
+                        sustain: 0.3,
+                        release: 1,
+                    },
+                }).toDestination();
+                synths.push(synth);
+                //schedule all of the events
+                track.notes.forEach((note) => {
+                    synth.triggerAttackRelease(
+                        note.name,
+                        note.duration,
+                        note.time + now,
+                        note.velocity
+                    );
+                });
+            });
+        } else {
+            //dispose the synth and make a new one
+            while (synths.length) {
+                const synth = synths.shift();
+                synth.disconnect();
+            }
+        }
+    });
