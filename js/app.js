@@ -46,6 +46,7 @@ const converter=[
 function parseFile(file) {
     //read the file
     const reader = new FileReader();
+    let convertedMidi
     reader.onload = function (e) {
         const midi = new Midi(e.target.result);
 
@@ -56,15 +57,15 @@ function parseFile(file) {
             .querySelector("tone-play-toggle")
             .removeAttribute("disabled");
         currentMidi = midi;
-        console.log(parseTracks(midi))
+        convertedMidi=parseTracks(midi)
+        let midiData = convertedMidi.toArray();
+        returnFile(midiData.buffer)
     };
     reader.readAsArrayBuffer(file);
 }
 
 function parseTracks(midiDatas){
-    console.log(currentMidi)
     currentMidi.tracks.forEach(track => {
-        console.log(track)
         transpose(track)
     })
     return currentMidi
@@ -73,46 +74,64 @@ function parseTracks(midiDatas){
 function transpose(track){
     track.notes.forEach(note=>{
         let found = converter.find(e => e.origin === note.midi);
-        console.log(found)
         if(found){
             note.midi=found.destination
         }
     })
 }
 
-const synths = [];
-document
-    .querySelector("tone-play-toggle")
-    .addEventListener("play", (e) => {
-        const playing = e.detail;
-        if (playing && currentMidi) {
-            const now = Tone.now() + 0.5;
-            currentMidi.tracks.forEach((track) => {
-                //create a synth for each track
-                const synth = new Tone.PolySynth(Tone.Synth, {
-                    envelope: {
-                        attack: 0.02,
-                        decay: 0.1,
-                        sustain: 0.3,
-                        release: 1,
-                    },
-                }).toDestination();
-                synths.push(synth);
-                //schedule all of the events
-                track.notes.forEach((note) => {
-                    synth.triggerAttackRelease(
-                        note.name,
-                        note.duration,
-                        note.time + now,
-                        note.velocity
-                    );
-                });
-            });
-        } else {
-            //dispose the synth and make a new one
-            while (synths.length) {
-                const synth = synths.shift();
-                synth.disconnect();
-            }
-        }
-    });
+function returnFile(object, filename, mimeType){
+    if(!mimeType){
+        mimeType='audio/midi'
+    }
+
+    if(!filename){
+        filename='output.mid'
+    }
+    
+    var blob = new Blob([object], {type: mimeType});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// const synths = [];
+// document
+//     .querySelector("tone-play-toggle")
+//     .addEventListener("play", (e) => {
+//         const playing = e.detail;
+//         if (playing && currentMidi) {
+//             const now = Tone.now() + 0.5;
+//             currentMidi.tracks.forEach((track) => {
+//                 //create a synth for each track
+//                 const synth = new Tone.PolySynth(Tone.Synth, {
+//                     envelope: {
+//                         attack: 0.02,
+//                         decay: 0.1,
+//                         sustain: 0.3,
+//                         release: 1,
+//                     },
+//                 }).toDestination();
+//                 synths.push(synth);
+//                 //schedule all of the events
+//                 track.notes.forEach((note) => {
+//                     synth.triggerAttackRelease(
+//                         note.name,
+//                         note.duration,
+//                         note.time + now,
+//                         note.velocity
+//                     );
+//                 });
+//             });
+//         } else {
+//             //dispose the synth and make a new one
+//             while (synths.length) {
+//                 const synth = synths.shift();
+//                 synth.disconnect();
+//             }
+//         }
+//     });
