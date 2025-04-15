@@ -84,12 +84,12 @@ class DrumMap {
         }
     }
 
-    set element(element, input, output) {
+    setElement(element, input, output) {
         this._elements[element].in = input;
         this._elements[element].out = output;
     }
 
-    get element(element) {
+    getElement(element) {
         return this._elements[element];
     }
 
@@ -98,7 +98,7 @@ class DrumMap {
     }
 
     mergeMap(input, output) {
-        this._elements.forEach(e => (el){
+        Object.entries(this._elements).forEach(([e, el])=>{
             el.in = (input[e]);
             el.out = (output[e]);
         })

@@ -99,6 +99,10 @@ function returnFile(object, filename, mimeType){
     document.body.removeChild(a);
 }
 
+var map=new DrumMap();
+console.log(map.EZmap)
+var merged=map.mergeMap(map.EZmap,map.GPmap)
+console.log(merged)
 // const synths = [];
 // document
 //     .querySelector("tone-play-toggle")
