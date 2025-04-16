@@ -39,9 +39,19 @@ if (
 }
 
 let currentMidi = null;
-const converter=[
-    {"origin":36, "destination":1}
-]
+
+
+var map=new DrumMap();
+var ez=new EazyDrummer();
+var gp=new GuitarPro();
+
+const converter=map.mergeMap(ez.map,gp.map)
+console.log(converter)
+
+
+// const converter=[
+//     {"origin":36, "destination":1}
+// ]
 
 function parseFile(file) {
     //read the file
@@ -73,9 +83,10 @@ function parseTracks(midiDatas){
 
 function transpose(track){
     track.notes.forEach(note=>{
-        let found = converter.find(e => e.origin === note.midi);
+        let test=map.searchConversion(note.midi)
+        let found = converter.find(e => e.in === note.midi);
         if(found){
-            note.midi=found.destination
+            note.midi=found.out
         }
     })
 }
@@ -99,10 +110,21 @@ function returnFile(object, filename, mimeType){
     document.body.removeChild(a);
 }
 
-var map=new DrumMap();
-console.log(map.EZmap)
-var merged=map.mergeMap(map.EZmap,map.GPmap)
-console.log(merged)
+
+// searchJSON(obj, key, val) {
+//     let results = [];
+//     for (let k in obj) {
+//         if (obj.hasOwnProperty(k)) {
+//             if (k === key && obj[k] === val) {
+//                 results.push(obj);
+//             } else if (typeof obj[k] === "object") {
+//                 results = results.concat(searchJSON(obj[k], key, val));
+//             }
+//         }
+//     }
+//     return results;
+// }
+
 // const synths = [];
 // document
 //     .querySelector("tone-play-toggle")
