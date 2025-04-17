@@ -27,6 +27,8 @@ class DrumMap {
             "Cowbell medium": { in: null, out: null },
             "Cowbell high": { in: null, out: null }
         }
+
+        this._cacheConversion = []
     }
 
     setMapElement(element, input, output) {
@@ -52,19 +54,21 @@ class DrumMap {
     }
 
     searchConversion(inputNote) {
-        let output = null
-        console.log(this._mapElements)
-        Object.entries(this._mapElements).forEach(([label, value]) => {
-            console.log(value, label)
-            let inputMap = value.in
-            // console.log(inputMap, Array.isArray(inputMap),inputMap.find(inputNote))
-            if (
-                // inputMap == inputNote || 
-                (Array.isArray(inputMap) 
-                && inputMap.find(inputNote))) {
-                    console.log('ok', inputNote, inputMap)
-                output = value.out
-            }
-        })
+        var output = null
+        let cached = this._cacheConversion[inputNote]
+        if (cached) {
+            output = cached
+            return output
+        }
+        else {
+            Object.entries(this._mapElements).forEach(([label, value]) => {
+                let inputMap = value.in
+                if (inputMap == inputNote || (Array.isArray(inputMap) && inputMap.indexOf(inputNote) > -1)) {
+                    output = value.out
+                }
+            })
+        }
+        this._cacheConversion[inputNote] = output
+        return output
     }
 }

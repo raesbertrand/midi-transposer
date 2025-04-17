@@ -83,10 +83,9 @@ function parseTracks(midiDatas){
 
 function transpose(track){
     track.notes.forEach(note=>{
-        let test=map.searchConversion(note.midi)
-        let found = converter.find(e => e.in === note.midi);
-        if(found){
-            note.midi=found.out
+        let found=map.searchConversion(note.midi)
+        if(found && found!=note.midi){
+            note.midi=found
         }
     })
 }
