@@ -63,9 +63,9 @@ function parseFile(file) {
         document.querySelector(
             "#ResultsText"
         ).value = JSON.stringify(midi, undefined, 2);
-        document
-            .querySelector("tone-play-toggle")
-            .removeAttribute("disabled");
+        // document
+        //     .querySelector("tone-play-toggle")
+        //     .removeAttribute("disabled");
         currentMidi = midi;
         convertedMidi=parseTracks(midi)
         let midiData = convertedMidi.toArray();
