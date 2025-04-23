@@ -46,12 +46,6 @@ var ez=new EazyDrummer();
 var gp=new GuitarPro();
 
 const converter=map.mergeMap(ez.map,gp.map)
-console.log(converter)
-
-
-// const converter=[
-//     {"origin":36, "destination":1}
-// ]
 
 function parseFile(file) {
     //read the file
@@ -67,14 +61,17 @@ function parseFile(file) {
         //     .querySelector("tone-play-toggle")
         //     .removeAttribute("disabled");
         currentMidi = midi;
-        convertedMidi=parseTracks(midi)
+        convertedMidi=parseTracks()
         let midiData = convertedMidi.toArray();
-        returnFile(midiData.buffer)
+
+        var [fileName, fileExtension] = file.name.split('.');
+
+        returnFile(midiData.buffer, fileName+'-guitarpro.'+fileExtension, file.type)
     };
     reader.readAsArrayBuffer(file);
 }
 
-function parseTracks(midiDatas){
+function parseTracks(){
     currentMidi.tracks.forEach(track => {
         transpose(track)
     })
