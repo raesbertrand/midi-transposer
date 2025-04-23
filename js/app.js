@@ -39,9 +39,13 @@ if (
 }
 
 let currentMidi = null;
-const converter=[
-    {"origin":36, "destination":1}
-]
+
+
+var map=new DrumMap();
+var ez=new EazyDrummer();
+var gp=new GuitarPro();
+
+const converter=map.mergeMap(ez.map,gp.map)
 
 function parseFile(file) {
     //read the file
@@ -53,18 +57,21 @@ function parseFile(file) {
         document.querySelector(
             "#ResultsText"
         ).value = JSON.stringify(midi, undefined, 2);
-        document
-            .querySelector("tone-play-toggle")
-            .removeAttribute("disabled");
+        // document
+        //     .querySelector("tone-play-toggle")
+        //     .removeAttribute("disabled");
         currentMidi = midi;
-        convertedMidi=parseTracks(midi)
+        convertedMidi=parseTracks()
         let midiData = convertedMidi.toArray();
-        returnFile(midiData.buffer)
+
+        var [fileName, fileExtension] = file.name.split('.');
+
+        returnFile(midiData.buffer, fileName+'-guitarpro.'+fileExtension, file.type)
     };
     reader.readAsArrayBuffer(file);
 }
 
-function parseTracks(midiDatas){
+function parseTracks(){
     currentMidi.tracks.forEach(track => {
         transpose(track)
     })
@@ -73,9 +80,9 @@ function parseTracks(midiDatas){
 
 function transpose(track){
     track.notes.forEach(note=>{
-        let found = converter.find(e => e.origin === note.midi);
-        if(found){
-            note.midi=found.destination
+        let found=map.searchConversion(note.midi)
+        if(found && found!=note.midi){
+            note.midi=found
         }
     })
 }
@@ -98,6 +105,21 @@ function returnFile(object, filename, mimeType){
     a.click();
     document.body.removeChild(a);
 }
+
+
+// searchJSON(obj, key, val) {
+//     let results = [];
+//     for (let k in obj) {
+//         if (obj.hasOwnProperty(k)) {
+//             if (k === key && obj[k] === val) {
+//                 results.push(obj);
+//             } else if (typeof obj[k] === "object") {
+//                 results = results.concat(searchJSON(obj[k], key, val));
+//             }
+//         }
+//     }
+//     return results;
+// }
 
 // const synths = [];
 // document
