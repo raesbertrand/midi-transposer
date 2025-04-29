@@ -1,0 +1,21 @@
+{
+ "name": "Mididrum converter",
+ "short_name": "Mididrum",
+ "theme_color": "#2196f3",
+ "background_color": "#2196f3",
+ "display": "standalone",
+ "start_url": ".",
+ "icons": [
+ {
+ "src": "icons/icon.png",
+ "sizes": "100x100",
+ "type": "image/png"
+ },
+{
+ "src": "icons/icon144.png",
+ "sizes": "144x144",
+ "type": "image/png"
+ }
+ ],
+ "splash_pages": null
+}
