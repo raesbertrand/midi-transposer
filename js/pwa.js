@@ -12,9 +12,9 @@ const staticAssets=[
 
 './manifest.json',
 
-'./images/icons/icon144.png',
+'./images/icon144.png',
 
-'./images/icons/icon.png'
+'./images/icon.png'
 
 ];
 
