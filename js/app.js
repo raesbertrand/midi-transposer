@@ -30,6 +30,11 @@ if (
             const files = e.target.files;
             if (files.length > 0) {
                 const file = files[0];
+                let inputSelect="";
+                let outputSelect="";
+                
+                // let input=new(dict.get(foo))()
+                const converter=map.mergeMap(ez.map,gp.map)
                 document.querySelector(
                     "#FileDrop #Text"
                 ).textContent = file.name;
@@ -40,13 +45,18 @@ if (
 
 let currentMidi = null;
 
+const dict = new Map([
+  ['EazyDrummer', EazyDrummer],
+  ['GGD', GGD],
+  ['GuitarPro', GuitarPro]
+]);
 
 var map=new DrumMap();
-var ez=new EazyDrummer();
+/*var ez=new EazyDrummer();
 var gp=new GuitarPro();
 
 const converter=map.mergeMap(ez.map,gp.map)
-
+*/
 function parseFile(file) {
     //read the file
     const reader = new FileReader();
