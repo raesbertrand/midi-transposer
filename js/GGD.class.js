@@ -1,4 +1,4 @@
-class GGD{
+class Ggd{
     constructor(){
         this._map = {
             "Snare rim shot": 26,
