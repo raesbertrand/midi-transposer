@@ -30,6 +30,15 @@ if (
             const files = e.target.files;
             if (files.length > 0) {
                 const file = files[0];
+
+                const inputClass = classes[getSelected("in")];
+                const outputClass = classes[getSelected("out")];
+
+                let input = new inputClass();
+                let output = new outputClass();
+
+                const converter = map.mergeMap(input.map, output.map);
+
                 document.querySelector(
                     "#FileDrop #Text"
                 ).textContent = file.name;
@@ -40,12 +49,13 @@ if (
 
 let currentMidi = null;
 
+const classes = {
+    "EazyDrummer": EazyDrummer,
+    "GGD": Ggd,
+    "GuitarPro": GuitarPro
+};
 
-var map=new DrumMap();
-var ez=new EazyDrummer();
-var gp=new GuitarPro();
-
-const converter=map.mergeMap(ez.map,gp.map)
+const map = new DrumMap();
 
 function parseFile(file) {
     //read the file
@@ -61,42 +71,42 @@ function parseFile(file) {
         //     .querySelector("tone-play-toggle")
         //     .removeAttribute("disabled");
         currentMidi = midi;
-        convertedMidi=parseTracks()
+        convertedMidi = parseTracks()
         let midiData = convertedMidi.toArray();
 
         var [fileName, fileExtension] = file.name.split('.');
 
-        returnFile(midiData.buffer, fileName+'-guitarpro.'+fileExtension, file.type)
+        returnFile(midiData.buffer, fileName + '-guitarpro.' + fileExtension, file.type)
     };
     reader.readAsArrayBuffer(file);
 }
 
-function parseTracks(){
+function parseTracks() {
     currentMidi.tracks.forEach(track => {
         transpose(track)
     })
     return currentMidi
 }
 
-function transpose(track){
-    track.notes.forEach(note=>{
-        let found=map.searchConversion(note.midi)
-        if(found && found!=note.midi){
-            note.midi=found
+function transpose(track) {
+    track.notes.forEach(note => {
+        let found = map.searchConversion(note.midi)
+        if (found && found != note.midi) {
+            note.midi = found
         }
     })
 }
 
-function returnFile(object, filename, mimeType){
-    if(!mimeType){
-        mimeType='audio/midi'
+function returnFile(object, filename, mimeType) {
+    if (!mimeType) {
+        mimeType = 'audio/midi'
     }
 
-    if(!filename){
-        filename='output.mid'
+    if (!filename) {
+        filename = 'output.mid'
     }
-    
-    var blob = new Blob([object], {type: mimeType});
+
+    var blob = new Blob([object], { type: mimeType });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -104,6 +114,11 @@ function returnFile(object, filename, mimeType){
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+}
+
+function getSelected(selectId) {
+    var e = document.getElementById(selectId);
+    return e.value;
 }
 
 
