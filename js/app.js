@@ -1,126 +1,151 @@
-if (
-    !(
-        window.File &&
-        window.FileReader &&
-        window.FileList &&
-        window.Blob
-    )
-) {
-    document.querySelector("#FileDrop #Text").textContent =
-        "Reading files not supported by this browser";
-} else {
-    const fileDrop = document.querySelector("#FileDrop");
-
-    fileDrop.addEventListener("dragenter", () =>
-        fileDrop.classList.add("Hover")
-    );
-
-    fileDrop.addEventListener("dragleave", () =>
-        fileDrop.classList.remove("Hover")
-    );
-
-    fileDrop.addEventListener("drop", () =>
-        fileDrop.classList.remove("Hover")
-    );
-
-    document
-        .querySelector("#FileDrop input")
-        .addEventListener("change", (e) => {
-            //get the files
-            const files = e.target.files;
-            if (files.length > 0) {
-                const file = files[0];
-
-                const inputClass = classes[getSelected("in")];
-                const outputClass = classes[getSelected("out")];
-
-                let input = new inputClass();
-                let output = new outputClass();
-
-                const converter = map.mergeMap(input.map, output.map);
-
-                document.querySelector(
-                    "#FileDrop #Text"
-                ).textContent = file.name;
-                parseFile(file);
-            }
-        });
+function isFileApiSupported() {
+    return window.File && window.FileReader && window.FileList && window.Blob;
 }
 
-let currentMidi = null;
+function setupFileDropEvents(fileDrop) {
+    const toggleHover = (isHovering) =>
+        fileDrop.classList.toggle("Hover", isHovering);
 
-const classes = {
-    "EazyDrummer": EazyDrummer,
-    "GgdMhPv": GgdMhPv,
-    "GuitarPro": GuitarPro
-};
+    fileDrop.addEventListener("dragenter", () => toggleHover(true));
+    fileDrop.addEventListener("dragleave", () => toggleHover(false));
+    fileDrop.addEventListener("drop", () => toggleHover(false));
+}
 
-const map = new DrumMap();
+function setupFileInputHandler() {
+    const input = document.querySelector("#FileDrop input");
+
+    input.addEventListener("change", (e) => {
+        try {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const inputClass = classes[getSelected("in")];
+            const outputClass = classes[getSelected("out")];
+
+            const inputInstance = new inputClass();
+            const outputInstance = new outputClass();
+            map.mergeMap(inputInstance.map, outputInstance.map);
+
+            document.querySelector("#FileDrop #Text").textContent = file.name;
+            parseFile(file);
+        } catch (err) {
+            console.error("Error handling file input:", err);
+            alert("Une erreur est survenue lors de la sélection du fichier.");
+        }
+    });
+}
 
 function parseFile(file) {
-    //read the file
-    const reader = new FileReader();
-    let convertedMidi
-    reader.onload = function (e) {
-        const midi = new Midi(e.target.result);
+    try {
+        const reader = new FileReader();
 
-        document.querySelector(
-            "#ResultsText"
-        ).value = JSON.stringify(midi, undefined, 2);
-        // document
-        //     .querySelector("tone-play-toggle")
-        //     .removeAttribute("disabled");
-        currentMidi = midi;
-        convertedMidi = parseTracks()
-        let midiData = convertedMidi.toArray();
+        reader.onload = (e) => {
+            try {
+                currentMidi = new Midi(e.target.result);
 
-        var [fileName, fileExtension] = file.name.split('.');
+                document.querySelector("#ResultsText").value = JSON.stringify(currentMidi, null, 2);
 
-        returnFile(midiData.buffer, fileName + '-guitarpro.' + fileExtension, file.type)
-    };
-    reader.readAsArrayBuffer(file);
+                const convertedMidi = parseTracks();
+                const midiData = convertedMidi.toArray();
+
+                const [fileName, fileExtension] = file.name.split(".");
+                returnFile(midiData.buffer, `${fileName}-guitarpro.${fileExtension}`, file.type);
+            } catch (err) {
+                console.error("Error processing MIDI file:", err);
+                alert("Erreur lors de la lecture ou la conversion du fichier MIDI.");
+            }
+        };
+
+        reader.onerror = (err) => {
+            console.error("FileReader error:", err);
+            alert("Erreur lors de la lecture du fichier.");
+        };
+
+        reader.readAsArrayBuffer(file);
+    } catch (err) {
+        console.error("Error setting up FileReader:", err);
+        alert("Une erreur est survenue lors de la préparation de la lecture du fichier.");
+    }
 }
 
 function parseTracks() {
-    currentMidi.tracks.forEach(track => {
-        transpose(track)
-    })
-    return currentMidi
+    try {
+        currentMidi.tracks.forEach(transpose);
+        return currentMidi;
+    } catch (err) {
+        console.error("Error parsing tracks:", err);
+        alert("Erreur lors de la transposition des pistes.");
+        return currentMidi;
+    }
 }
 
 function transpose(track) {
-    track.notes.forEach(note => {
-        let found = map.searchConversion(note.midi)
-        if (found && found != note.midi) {
-            note.midi = found
-        }
-    })
+    try {
+        track.notes.forEach(note => {
+            const converted = map.searchConversion(note.midi);
+            if (converted && converted !== note.midi) {
+                note.midi = converted;
+            }
+        });
+    } catch (err) {
+        console.error("Error transposing track:", err);
+    }
 }
 
-function returnFile(object, filename, mimeType) {
-    if (!mimeType) {
-        mimeType = 'audio/midi'
-    }
+function returnFile(buffer, filename = "output.mid", mimeType = "audio/midi") {
+    try {
+        const blob = new Blob([buffer], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
 
-    if (!filename) {
-        filename = 'output.mid'
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    } catch (err) {
+        console.error("Error creating downloadable file:", err);
+        alert("Erreur lors de la création ou du téléchargement du fichier.");
     }
-
-    var blob = new Blob([object], { type: mimeType });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
 }
 
 function getSelected(selectId) {
-    var e = document.getElementById(selectId);
-    return e.value;
+    try {
+        return document.getElementById(selectId).value;
+    } catch (err) {
+        console.error(`Error getting selected value for "${selectId}":`, err);
+        return "";
+    }
 }
 
+(function init() {
+    const fileText = document.querySelector("#FileDrop #Text");
+
+    if (!isFileApiSupported()) {
+        fileText.textContent = "Reading files not supported by this browser";
+        return;
+    }
+
+    try {
+        const fileDrop = document.querySelector("#FileDrop");
+        setupFileDropEvents(fileDrop);
+        setupFileInputHandler();
+    } catch (err) {
+        console.error("Error initializing file drop area:", err);
+        alert("Une erreur est survenue lors de l'initialisation.");
+    }
+})();
+
+// === Variables globales ===
+let currentMidi = null;
+
+const classes = {
+    EazyDrummer,
+    GgdMhPv,
+    GuitarPro,
+};
+
+const map = new DrumMap();
 
 // searchJSON(obj, key, val) {
 //     let results = [];
