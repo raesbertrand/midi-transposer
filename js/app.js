@@ -51,7 +51,7 @@ let currentMidi = null;
 
 const classes = {
     "EazyDrummer": EazyDrummer,
-    "GGD": Ggd,
+    "GgdMhPv": GgdMhPv,
     "GuitarPro": GuitarPro
 };
 
