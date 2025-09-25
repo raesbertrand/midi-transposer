@@ -140,9 +140,9 @@ function getSelected(selectId) {
 let currentMidi = null;
 
 const classes = {
-    EazyDrummer,
-    GgdMhPv,
-    GuitarPro,
+    "EazyDrummer": EazyDrummer,
+    "GgdMhPv": GgdMhPv,
+    "GuitarPro": GuitarPro
 };
 
 const map = new DrumMap();
