@@ -1,4 +1,4 @@
-class Ggd{
+class GgdModernMassive2{
     constructor(){
         this._map = {
             "Cymbal China 1 Hit": 74,
